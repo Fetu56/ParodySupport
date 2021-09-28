@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Client
@@ -64,6 +64,9 @@ namespace Client
                                     {
                                         Process.Start(get.Replace(get.Split(' ')[0], ""));
                                     }
+                                    break;
+                                case "-mouse":
+                                    Cursor.SetCursorPos(int.Parse(get.Split(' ')[1]), int.Parse(get.Split(' ')[2]));
                                     break;
                             }
                         }

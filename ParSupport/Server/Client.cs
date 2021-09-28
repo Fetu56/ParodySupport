@@ -21,7 +21,7 @@ namespace Server
         }
         public override string ToString()
         {
-            return $"Client with ip {socket.RemoteEndPoint} is {socket.Connected}";
+            return $"Client with ip {socket.RemoteEndPoint} is " + (socket.Connected ? "connected" : "not connected");
         }
     }
 }

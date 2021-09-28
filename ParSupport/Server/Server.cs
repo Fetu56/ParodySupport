@@ -96,7 +96,7 @@ namespace Server //меню сервера - запуск по или отклю
             {
                 try
                 {
-                    Console.WriteLine("Выберите действие [1] - запуск программы, [2] - отключение, [0] - выход:");
+                    Console.WriteLine("Выберите действие:\n[1] - запуск программы\n[2] - отключение\n[3] - движение мышки\n[0] - выход:");
                     msg = Console.ReadLine();
                     Option option = Option.nullOp;
                     switch(msg)
@@ -106,6 +106,9 @@ namespace Server //меню сервера - запуск по или отклю
                             break;
                         case "2":
                             option = Option.disconnect;
+                            break;
+                        case "3":
+                            option = Option.mouseMove;
                             break;
                         case "0":
                             option = Option.exit;
@@ -156,6 +159,20 @@ namespace Server //меню сервера - запуск по или отклю
                                         clients.RemoveAt(id);
                                     }
                                     break;
+                                case Option.mouseMove:
+                                    if (get.StartsWith("!"))
+                                    {
+                                        SendMsgToAll("-mouse " + GetCords());
+                                        DisconnectAll();
+                                    }
+                                    else
+                                    {
+                                        int id = int.Parse(get);
+                                        clients[id].Send("-mouse " + GetCords());
+                                        clients[id].Disconnect();
+                                        clients.RemoveAt(id);
+                                    }
+                                    break;
                             }
                         }
                         else
@@ -185,6 +202,18 @@ namespace Server //меню сервера - запуск по или отклю
                 stringBuilder.Append(Encoding.Unicode.GetString(data, 0, bytes));
             } while (socket.Available > 0);
             return stringBuilder.ToString();
+        }
+        private string GetCords()
+        {
+            Console.WriteLine("Введите координаты в формате \"x y\":");
+            int cordX = 0;
+            int cordY = 0;
+            string get = Console.ReadLine();
+            while(!int.TryParse(get.Split(' ')[0], out cordX) || !int.TryParse(get.Split(' ')[1], out cordY))
+            {
+                get = Console.ReadLine();
+            }
+            return cordX + " " + cordY;
         }
     }
 }
