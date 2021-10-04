@@ -5,7 +5,7 @@ namespace Server
 {
     class Client
     {
-        Socket socket;
+        public Socket socket { get; private set; }
         public Client(Socket socketg)
         {
             socket = socketg;

@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -65,8 +68,55 @@ namespace Client
                                         Process.Start(get.Replace(get.Split(' ')[0], ""));
                                     }
                                     break;
-                                case "-mouse":
-                                    Cursor.SetCursorPos(int.Parse(get.Split(' ')[1]), int.Parse(get.Split(' ')[2]));
+                                case "-getapps":
+                                    List<string> progs = new List<string>();
+                                    string programsNames = ""; int i = 0;
+                                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"))
+                                    {
+                                        foreach (string subkey_name in key.GetSubKeyNames())
+                                        {
+                                            using (RegistryKey subkey = key.OpenSubKey(subkey_name))
+                                            {
+
+                                                try
+                                                {
+                                                    if (subkey.GetValue("InstallLocation") != null && subkey.GetValue("DisplayName") != null && subkey.GetValue("DisplayName").ToString().Length > 0)
+                                                    {
+                                                        progs.Add(subkey.GetValue("InstallLocation").ToString());
+                                                        programsNames += i + ". " + subkey.GetValue("DisplayName") + "\n";
+                                                        i++;
+                                                    }
+                                                }
+                                                catch (ObjectDisposedException) { }
+                                            }
+                                        }
+                                    }
+                                    socket.Send(Encoding.Unicode.GetBytes(programsNames));
+                                    Console.WriteLine("Список программ отправлен на сервер.");
+                                    int indexOfProg = -1;
+                                    
+                                    if(int.TryParse(GetString(), out indexOfProg))
+                                    {
+                                        string outExes = "";
+                                        string[] exes = Directory.GetFiles(progs[indexOfProg], "*.exe", SearchOption.AllDirectories);
+                                        for(int j =0; j < exes.Length; j++)
+                                        {
+                                            outExes += j + ". " + exes[j] + "\n";
+                                        }
+
+
+                                        socket.Send(Encoding.Unicode.GetBytes(outExes));
+                                        Console.WriteLine("Список запускаемых файлов программы отправлен на сервер.");
+
+                                        int indexOfExe = -1;
+
+                                        if (int.TryParse(GetString(), out indexOfExe))
+                                        {
+                                            Process.Start(exes[indexOfExe]);
+                                            Console.WriteLine("Запущенна программа.");
+                                        }
+                                    }
+                                    else { socket.Send(Encoding.Unicode.GetBytes("Error")); }
                                     break;
                             }
                         }

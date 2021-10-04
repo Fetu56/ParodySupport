@@ -107,11 +107,11 @@ namespace Server //меню сервера - запуск по или отклю
                         case "2":
                             option = Option.disconnect;
                             break;
-                        case "3":
-                            option = Option.mouseMove;
-                            break;
                         case "0":
                             option = Option.exit;
+                            break;
+                        default:
+                            option = Option.nullOp;
                             break;
                     }    
                     if (option == Option.exit)
@@ -120,7 +120,7 @@ namespace Server //меню сервера - запуск по или отклю
                         Environment.Exit(0);
                         break;
                     }
-                    else
+                    else if(option != Option.nullOp)
                     {
                         if(clients.Count > 0)
                         {
@@ -133,17 +133,42 @@ namespace Server //меню сервера - запуск по или отклю
                             switch (option)
                             {
                                 case Option.startProg:
-                                    Console.WriteLine("Введите адресс приложения и аргументы к его запуску:");
                                     if (get.StartsWith("!"))
                                     {
+                                        Console.WriteLine("Введите адресс приложения и аргументы к его запуску:");
                                         SendMsgToAll("--start "+Console.ReadLine());
                                     }
                                     else
                                     {
                                         int id = int.Parse(get);
-                                        clients[id].Send("--start " + Console.ReadLine());
+                                        clients[id].Send("-getapps");
+                                        {
+                                            Console.WriteLine("Программы на компьютере пользователя:"+GetString(clients[id].socket));
+                                            string getRes = Console.ReadLine();
+                                            int tmp;
+                                            while (!int.TryParse(getRes, out tmp))
+                                            {
+                                                getRes = Console.ReadLine();
+                                            }
+                                            clients[id].Send(getRes);
+                                            string getR = GetString(clients[id].socket);
+                                            if (getR != "Error")
+                                            {
+                                                Console.WriteLine("Список запускаемых файлов:"+ getR);
+                                                do
+                                                {
+                                                    getRes = Console.ReadLine();
+                                                } while (!int.TryParse(getRes, out tmp));
+                                                clients[id].Send(getRes);
+                                                Console.WriteLine("Программа запущена.");
+                                            }
+                                            else { Console.WriteLine("Error"); }
+
+
+
+                                        }
+                                        
                                     }
-                                    
                                     break;
                                 case Option.disconnect:
                                     if (get.StartsWith("!"))
@@ -155,20 +180,6 @@ namespace Server //меню сервера - запуск по или отклю
                                     {
                                         int id = int.Parse(get);
                                         clients[id].Send("→disconnect@");
-                                        clients[id].Disconnect();
-                                        clients.RemoveAt(id);
-                                    }
-                                    break;
-                                case Option.mouseMove:
-                                    if (get.StartsWith("!"))
-                                    {
-                                        SendMsgToAll("-mouse " + GetCords());
-                                        DisconnectAll();
-                                    }
-                                    else
-                                    {
-                                        int id = int.Parse(get);
-                                        clients[id].Send("-mouse " + GetCords());
                                         clients[id].Disconnect();
                                         clients.RemoveAt(id);
                                     }
@@ -191,16 +202,16 @@ namespace Server //меню сервера - запуск по или отклю
         {
             clients.ForEach(x => x.Send(msg));
         }
-        private string GetString()
+        private string GetString(Socket sc)
         {
             StringBuilder stringBuilder = new StringBuilder();
             int bytes = 0;
             byte[] data = new byte[256];
             do
             {
-                bytes = socket.Receive(data);
+                bytes = sc.Receive(data);
                 stringBuilder.Append(Encoding.Unicode.GetString(data, 0, bytes));
-            } while (socket.Available > 0);
+            } while (sc.Available > 0);
             return stringBuilder.ToString();
         }
         private string GetCords()
