@@ -7,7 +7,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Client
@@ -19,19 +18,29 @@ namespace Client
         public Task process { get; private set; }
         public Client()
         {
-            iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8000);
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        }
-        public Client(string ip, int port)
-        {
-            try
-            {
-                iPEndPoint = new IPEndPoint(IPAddress.Parse(ip), port);
-            }
-            catch (Exception)
+            RegistryKey Rkey = Registry.CurrentUser;
+            RegistryKey adress = Rkey.OpenSubKey("adress");
+            
+            if (adress == null) 
             {
                 iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8000);
+                Rkey.CreateSubKey("adress", true);
+                adress.CreateSubKey("ip");
+                adress.CreateSubKey("port");
             }
+            else
+            {
+                try
+                {
+                    iPEndPoint = new IPEndPoint(IPAddress.Parse(adress.GetValue("ip").ToString()), int.Parse(adress.GetValue("port").ToString()));
+                }
+                catch (Exception)
+                {
+                    iPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8000);
+                }
+                adress.Close();
+            }
+           
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
         public void Start()
@@ -117,6 +126,16 @@ namespace Client
                                         }
                                     }
                                     else { socket.Send(Encoding.Unicode.GetBytes("Error")); }
+                                    break;
+                                case "-reg":
+                                    RegistryKey Rkey = Registry.CurrentUser;
+
+                                    RegistryKey valKey = Rkey.OpenSubKey("adress", true);
+                                    if(valKey != null)
+                                    {
+                                        valKey.SetValue(get.Split(' ')[1], get.Split(' ')[2]);
+                                        valKey.Close();
+                                    }
                                     break;
                             }
                         }

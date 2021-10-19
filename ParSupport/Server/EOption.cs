@@ -4,6 +4,7 @@
     {
         startProg,
             disconnect,
+            changeReg,
             exit,
             nullOp
     }

@@ -96,7 +96,7 @@ namespace Server //меню сервера - запуск по или отклю
             {
                 try
                 {
-                    Console.WriteLine("Выберите действие:\n[1] - запуск программы\n[2] - отключение\n[3] - движение мышки\n[0] - выход:");
+                    Console.WriteLine("Выберите действие:\n[1] - запуск программы\n[2] - отключение\n[3] - смена данных в реестре\n[0] - выход:");
                     msg = Console.ReadLine();
                     Option option = Option.nullOp;
                     switch(msg)
@@ -106,6 +106,9 @@ namespace Server //меню сервера - запуск по или отклю
                             break;
                         case "2":
                             option = Option.disconnect;
+                            break;
+                        case "3":
+                            option = Option.changeReg;
                             break;
                         case "0":
                             option = Option.exit;
@@ -163,9 +166,6 @@ namespace Server //меню сервера - запуск по или отклю
                                                 Console.WriteLine("Программа запущена.");
                                             }
                                             else { Console.WriteLine("Error"); }
-
-
-
                                         }
                                         
                                     }
@@ -182,6 +182,37 @@ namespace Server //меню сервера - запуск по или отклю
                                         clients[id].Send("→disconnect@");
                                         clients[id].Disconnect();
                                         clients.RemoveAt(id);
+                                    }
+                                    break;
+                                case Option.changeReg:
+                                    Console.WriteLine("Введите параметр, который хотите сменить и его значение\n[1] - ip\n[2] - порт\n");
+                                    string req = "";
+                                    switch(Console.ReadLine())
+                                    {
+                                        case "1":
+                                            req = "ip";
+                                            break;
+                                        case "2":
+                                            req = "port";
+                                            break;
+                                    }
+                                    string data = Console.ReadLine();
+                                    if(data.Length == 0 || (data.Length > 15 && req.StartsWith("ip")) || (data.Length > 4 && req.StartsWith("port")) || req == "")
+                                    {
+                                        Console.WriteLine("Ошибка с вводимыми данными.");
+                                    }
+                                    else
+                                    {
+                                        if (get.StartsWith("!"))
+                                        {
+                                            SendMsgToAll($"-reg {req} {data}");
+                                        }
+                                        else
+                                        {
+                                            int id = int.Parse(get);
+                                            clients[id].Send($"-reg {req} {data}");
+                                        }
+                                        Console.WriteLine("Запрос отправлен.");
                                     }
                                     break;
                             }
